@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Validation;
+
 class Document extends Model
 {
     protected $table = 'documents';
@@ -20,6 +21,8 @@ class Document extends Model
         'idCategorie',
         'idDossier',
         'idUtilisateur',
+        'dateEmission',
+        'dateExpiration',
     ];
 
     public function categorie()
@@ -41,12 +44,14 @@ class Document extends Model
     {
         return $this->hasMany(VersionDocument::class, 'idDocument', 'idDocument');
     }
+
     public function validations()
-{
-    return $this->hasMany(Validation::class, 'idDocument', 'idDocument');
-}
-public function archivage()
-{
-    return $this->hasOne(Archivage::class, 'idDocument', 'idDocument');
-}
+    {
+        return $this->hasMany(Validation::class, 'idDocument', 'idDocument');
+    }
+
+    public function archivage()
+    {
+        return $this->hasOne(Archivage::class, 'idDocument', 'idDocument');
+    }
 }

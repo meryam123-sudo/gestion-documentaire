@@ -16,6 +16,8 @@ export default function AjouterDocument() {
     niveauConfidentialite: "Confidentiel",
     idCategorie: "",
     idDossier: "",
+    dateEmission: "",
+    dateExpiration: "",
     idUtilisateur: utilisateur?.idUtilisateur,
     fichier: null,
   });
@@ -30,9 +32,17 @@ export default function AjouterDocument() {
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
+    if (files) {
+      setForm({
+        ...form,
+        [name]: files[0],
+      });
+      return;
+    }
+
     setForm({
       ...form,
-      [name]: files ? files[0] : value,
+      [name]: value,
     });
   };
 
@@ -43,20 +53,23 @@ export default function AjouterDocument() {
     const data = new FormData();
 
     Object.keys(form).forEach((key) => {
-      data.append(key, form[key]);
+      data.append(key, form[key] ?? "");
     });
 
-    try {
-  await api.post("/documents", data, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+    data.append("dateEmission", form.dateEmission);
+    data.append("dateExpiration", form.dateExpiration);
 
-  setMessage("Document ajouté avec succès");
-} catch (error) {
-  setMessage(error.response?.data?.message || "Erreur lors du dépôt");
-}
+    try {
+      await api.post("/documents", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setMessage("Document ajouté avec succès");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Erreur lors du dépôt");
+    }
   };
 
   return (
@@ -69,12 +82,32 @@ export default function AjouterDocument() {
       {message && <div className="info-message">{message}</div>}
 
       <form className="form-card" onSubmit={deposerDocument}>
-        <input name="titre" placeholder="Titre" onChange={handleChange} />
-        <input name="reference" placeholder="Référence ex: DOC-005" onChange={handleChange} />
+        <input
+          name="titre"
+          placeholder="Titre"
+          value={form.titre}
+          onChange={handleChange}
+        />
 
-        <textarea name="description" placeholder="Description" onChange={handleChange}></textarea>
+        <input
+          name="reference"
+          placeholder="Référence ex: DOC-005"
+          value={form.reference}
+          onChange={handleChange}
+        />
 
-        <select name="typeDocument" onChange={handleChange} value={form.typeDocument}>
+        <textarea
+          name="description"
+          placeholder="Description"
+          value={form.description}
+          onChange={handleChange}
+        ></textarea>
+
+        <select
+          name="typeDocument"
+          onChange={handleChange}
+          value={form.typeDocument}
+        >
           <option value="PDF">PDF</option>
           <option value="DOC">DOC</option>
           <option value="DOCX">DOCX</option>
@@ -91,23 +124,53 @@ export default function AjouterDocument() {
           <option value="Confidentiel">Confidentiel</option>
         </select>
 
-        <select name="idCategorie" onChange={handleChange}>
+        <select
+          name="idCategorie"
+          value={form.idCategorie}
+          onChange={handleChange}
+        >
           <option value="">Choisir catégorie</option>
-          {categories.map((cat) => (
-            <option key={cat.idCategorie} value={cat.idCategorie}>
-              {cat.nomCategorie}
+
+          {categories.map((categorie) => (
+            <option
+              key={categorie.idCategorie}
+              value={categorie.idCategorie}
+            >
+              {categorie.nomCategorie}
             </option>
           ))}
         </select>
 
-        <select name="idDossier" onChange={handleChange}>
+        <select
+          name="idDossier"
+          value={form.idDossier}
+          onChange={handleChange}
+        >
           <option value="">Choisir dossier</option>
-          {dossiers.map((dos) => (
-            <option key={dos.idDossier} value={dos.idDossier}>
-              {dos.nomDossier}
+
+          {dossiers.map((dossier) => (
+            <option
+              key={dossier.idDossier}
+              value={dossier.idDossier}
+            >
+              {dossier.nomDossier}
             </option>
           ))}
         </select>
+
+        <input
+          type="date"
+          name="dateEmission"
+          value={form.dateEmission}
+          onChange={handleChange}
+        />
+
+        <input
+          type="date"
+          name="dateExpiration"
+          value={form.dateExpiration}
+          onChange={handleChange}
+        />
 
         <input type="file" name="fichier" onChange={handleChange} />
 

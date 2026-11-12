@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Archive, CheckCircle, Clock, FileText } from "lucide-react";
+import {
+  Archive,
+  CheckCircle,
+  Clock,
+  FileText,
+  AlertTriangle,
+} from "lucide-react";
 import Layout from "../components/Layout";
 import api from "../services/api";
 
@@ -55,40 +61,58 @@ export default function Dashboard() {
             <h2>{stats?.documentsArchives ?? "..."}</h2>
           </div>
         </div>
+
+        <div className="stat-card">
+          <AlertTriangle />
+          <div>
+            <h3>Expirés</h3>
+            <h2>{stats?.documentsExpires || 0}</h2>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <Clock />
+          <div>
+            <h3>Expirent bientôt</h3>
+            <h2>{stats?.documentsExpirantBientot || 0}</h2>
+          </div>
+        </div>
       </div>
-<div className="dashboard-grid">
-  <div className="panel">
-    <h3>Documents récents</h3>
 
-    {stats?.documentsRecents?.length > 0 ? (
-      stats.documentsRecents.map((doc) => (
-        <div className="list-row" key={doc.idDocument}>
-          <span>{doc.titre}</span>
-          <span className={`status-badge status-${doc.statut}`}>
-            {doc.statut}
-          </span>
+      <div className="dashboard-grid">
+        <div className="panel">
+          <h3>Documents récents</h3>
+
+          {stats?.documentsRecents?.length > 0 ? (
+            stats.documentsRecents.map((doc) => (
+              <div className="list-row" key={doc.idDocument}>
+                <span>{doc.titre}</span>
+                <span className={`status-badge status-${doc.statut}`}>
+                  {doc.statut}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p>Aucun document récent</p>
+          )}
         </div>
-      ))
-    ) : (
-      <p>Aucun document récent</p>
-    )}
-  </div>
 
-  <div className="panel">
-    <h3>Activités récentes</h3>
+        <div className="panel">
+          <h3>Activités récentes</h3>
 
-    {stats?.activitesRecentes?.length > 0 ? (
-      stats.activitesRecentes.map((act) => (
-        <div className="list-row" key={act.idAudit}>
-          <span>{act.action}</span>
-          <small>{act.dateAction}</small>
+          {stats?.activitesRecentes?.length > 0 ? (
+            stats.activitesRecentes.map((act) => (
+              <div className="list-row" key={act.idAudit}>
+                <span>{act.action}</span>
+                <small>{act.dateAction}</small>
+              </div>
+            ))
+          ) : (
+            <p>Aucune activité récente</p>
+          )}
         </div>
-      ))
-    ) : (
-      <p>Aucune activité récente</p>
-    )}
-  </div>
-</div>
+      </div>
+
       <div className="panel">
         <h3>Documents récents</h3>
 

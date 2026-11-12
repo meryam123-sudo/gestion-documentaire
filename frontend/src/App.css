@@ -877,3 +877,11 @@ body,
     grid-template-columns: 1fr;
   }
 }
+.status-expiré {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+tr.expired-row td {
+  background: #fff1f2;
+}

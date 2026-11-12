@@ -8,6 +8,7 @@ export default function Documents() {
   const [recherche, setRecherche] = useState("");
   const [statut, setStatut] = useState("");
   const [reference, setReference] = useState("");
+  const [loadingId, setLoadingId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -27,26 +28,61 @@ export default function Documents() {
     chargerDocuments();
   }, []);
 
-  const telecharger = async (id) => {
-    window.open(
-      `http://127.0.0.1:8000/api/documents/${id}/telecharger`,
-      "_blank"
-    );
-  };
-
-  const soumettre = async (id) => {
+ const telecharger = async (doc) => {
   try {
-    setLoadingId(id);
+    const response = await api.get(
+      `/documents/${doc.idDocument}/telecharger`,
+      {
+        responseType: "blob",
+      }
+    );
 
-    await api.post(`/documents/${id}/soumettre`);
+    const extensions = {
+      PDF: "pdf",
+      Word: "docx",
+      WORD: "docx",
+      DOCX: "docx",
+      Excel: "xlsx",
+      EXCEL: "xlsx",
+      Image: "png",
+      IMAGE: "png",
+    };
 
-    chargerDocuments();
+    const extension = extensions[doc.typeDocument] || "pdf";
+
+    const nomFichier = `${doc.reference || doc.titre}.${extension}`;
+
+    const url = window.URL.createObjectURL(
+      new Blob([response.data])
+    );
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = nomFichier;
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
   } catch (error) {
-    alert(error.response?.data?.message);
-  } finally {
-    setLoadingId(null);
+    alert("Erreur lors du téléchargement");
   }
 };
+
+  const soumettre = async (id) => {
+    try {
+      setLoadingId(id);
+
+      await api.post(`/documents/${id}/soumettre`);
+
+      chargerDocuments();
+    } catch (error) {
+      alert(error.response?.data?.message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   const supprimer = async (id) => {
     if (!window.confirm("Supprimer ce document ?")) return;
@@ -88,10 +124,7 @@ export default function Documents() {
           onChange={(e) => setReference(e.target.value)}
         />
 
-        <select
-          value={statut}
-          onChange={(e) => setStatut(e.target.value)}
-        >
+        <select value={statut} onChange={(e) => setStatut(e.target.value)}>
           <option value="">Tous les statuts</option>
           <option value="brouillon">Brouillon</option>
           <option value="soumis">Soumis</option>
@@ -100,9 +133,7 @@ export default function Documents() {
           <option value="archivé">Archivé</option>
         </select>
 
-        <button onClick={chargerDocuments}>
-          Rechercher
-        </button>
+        <button onClick={chargerDocuments}>Rechercher</button>
       </div>
 
       <div className="table-card">
@@ -113,6 +144,7 @@ export default function Documents() {
               <th>Titre</th>
               <th>Catégorie</th>
               <th>Statut</th>
+              <th>Expiration</th>
               <th>Confidentialité</th>
               <th>Actions</th>
             </tr>
@@ -126,21 +158,27 @@ export default function Documents() {
                 <td>{doc.categorie?.nomCategorie}</td>
 
                 <td>
-                  <span className={`status-badge status-${doc.statut}`}>
-  {doc.statut}
-</span>
+                  <span
+                    className={`status-badge status-${
+                      doc.statutAffiche || doc.statut
+                    }`}
+                  >
+                    {doc.statutAffiche || doc.statut}
+                  </span>
                 </td>
+
+                <td>{doc.dateExpiration ? doc.dateExpiration : "Non définie"}</td>
 
                 <td>{doc.niveauConfidentialite}</td>
 
                 <td>
                   <div className="action-buttons">
                     <button
-                      className="btn-secondary"
-                      onClick={() => telecharger(doc.idDocument)}
-                    >
-                      Télécharger
-                    </button>
+  className="btn-secondary"
+  onClick={() => telecharger(doc)}
+>
+  Télécharger
+</button>
 
                     {doc.statut === "brouillon" && (
                       <>
@@ -161,12 +199,14 @@ export default function Documents() {
                         </button>
 
                         <button
-  className="btn-success"
-  disabled={loadingId === doc.idDocument}
-  onClick={() => soumettre(doc.idDocument)}
->
-  {loadingId === doc.idDocument ? "Envoi..." : "Soumettre"}
-</button>
+                          className="btn-success"
+                          disabled={loadingId === doc.idDocument}
+                          onClick={() => soumettre(doc.idDocument)}
+                        >
+                          {loadingId === doc.idDocument
+                            ? "Envoi..."
+                            : "Soumettre"}
+                        </button>
                       </>
                     )}
                   </div>

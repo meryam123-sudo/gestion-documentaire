@@ -86,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('role:Administrateur Principal,Gestionnaire documentaire')->group(function () {
+    Route::middleware('role:Administrateur Principal,Gestionnaire documentaire,Archiviste,Consultant autorisé')->group(function () {
 
         Route::apiResource('documents', DocumentController::class);
 
@@ -106,7 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('role:Administrateur Principal,Responsable validation')->group(function () {
+    Route::middleware('role:Administrateur Principal,Responsable de validation')->group(function () {
 
         Route::get('/validations/documents-soumis', [ValidationController::class, 'documentsSoumis']);
 

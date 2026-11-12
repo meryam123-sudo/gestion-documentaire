@@ -16,9 +16,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 export default function Sidebar() {
   const navigate = useNavigate();
 
-  const utilisateur = JSON.parse(
-    localStorage.getItem("utilisateur")
-  );
+  const utilisateur = JSON.parse(localStorage.getItem("utilisateur"));
 
   const role = utilisateur?.role?.nomRole;
 
@@ -41,7 +39,6 @@ export default function Sidebar() {
       </div>
 
       <nav>
-
         {role === "Administrateur Principal" && (
           <>
             <NavLink to="/dashboard">
@@ -149,6 +146,62 @@ export default function Sidebar() {
           </>
         )}
 
+        {role === "Consultant autorisé" && (
+          <>
+            <NavLink to="/dashboard">
+              <BarChart3 size={18} />
+              Dashboard
+            </NavLink>
+
+            <NavLink to="/documents">
+              <FileText size={18} />
+              Documents
+            </NavLink>
+
+            <NavLink to="/notifications">
+              <Bell size={18} />
+              Notifications
+            </NavLink>
+          </>
+        )}
+
+        {role === "Auditeur" && (
+          <>
+            <NavLink to="/dashboard">
+              <BarChart3 size={18} />
+              Dashboard
+            </NavLink>
+
+            <NavLink to="/historique">
+              <History size={18} />
+              Historique
+            </NavLink>
+          </>
+        )}
+
+        {role === "Responsable de validation" && (
+          <>
+            <NavLink to="/dashboard">
+              <BarChart3 size={18} />
+              Dashboard
+            </NavLink>
+
+            <NavLink to="/validations">
+              <CheckSquare size={18} />
+              Validations
+            </NavLink>
+
+            <NavLink to="/historique">
+              <History size={18} />
+              Historique
+            </NavLink>
+
+            <NavLink to="/notifications">
+              <Bell size={18} />
+              Notifications
+            </NavLink>
+          </>
+        )}
       </nav>
 
       <div className="sidebar-user">
@@ -156,9 +209,7 @@ export default function Sidebar() {
           {utilisateur?.prenom} {utilisateur?.nom}
         </strong>
 
-        <small>
-          {role}
-        </small>
+        <small>{role}</small>
 
         <button onClick={logout}>
           <LogOut size={16} />

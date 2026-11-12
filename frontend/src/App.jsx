@@ -30,10 +30,7 @@ function App() {
         {/* Routes publiques */}
         <Route path="/" element={<Login />} />
 
-        <Route
-          path="/register"
-          element={<Register />}
-        />
+        <Route path="/register" element={<Register />} />
 
         {/* Dashboard */}
         <Route
@@ -50,7 +47,16 @@ function App() {
           path="/documents"
           element={
             <PrivateRoute>
-              <Documents />
+              <ProtectedRole
+                allowedRoles={[
+                  "Administrateur Principal",
+                  "Gestionnaire documentaire",
+                  "Archiviste",
+                  "Consultant autorisé",
+                ]}
+              >
+                <Documents />
+              </ProtectedRole>
             </PrivateRoute>
           }
         />
@@ -59,7 +65,14 @@ function App() {
           path="/documents/ajouter"
           element={
             <PrivateRoute>
-              <AjouterDocument />
+              <ProtectedRole
+                allowedRoles={[
+                  "Administrateur Principal",
+                  "Gestionnaire documentaire",
+                ]}
+              >
+                <AjouterDocument />
+              </ProtectedRole>
             </PrivateRoute>
           }
         />
@@ -68,7 +81,14 @@ function App() {
           path="/documents/:id/modifier"
           element={
             <PrivateRoute>
-              <ModifierDocument />
+              <ProtectedRole
+                allowedRoles={[
+                  "Administrateur Principal",
+                  "Gestionnaire documentaire",
+                ]}
+              >
+                <ModifierDocument />
+              </ProtectedRole>
             </PrivateRoute>
           }
         />
@@ -81,7 +101,7 @@ function App() {
               <ProtectedRole
                 allowedRoles={[
                   "Administrateur Principal",
-                  "Responsable Validation",
+                  "Responsable de validation",
                 ]}
               >
                 <Validations />
@@ -112,7 +132,16 @@ function App() {
           path="/historique"
           element={
             <PrivateRoute>
-              <Historique />
+              <ProtectedRole
+                allowedRoles={[
+                  "Administrateur Principal",
+                  "Gestionnaire documentaire",
+                  "Archiviste",
+                  "Auditeur",
+                ]}
+              >
+                <Historique />
+              </ProtectedRole>
             </PrivateRoute>
           }
         />
@@ -132,11 +161,7 @@ function App() {
           path="/utilisateurs"
           element={
             <PrivateRoute>
-              <ProtectedRole
-                allowedRoles={[
-                  "Administrateur Principal",
-                ]}
-              >
+              <ProtectedRole allowedRoles={["Administrateur Principal"]}>
                 <Utilisateurs />
               </ProtectedRole>
             </PrivateRoute>
@@ -148,11 +173,7 @@ function App() {
           path="/roles"
           element={
             <PrivateRoute>
-              <ProtectedRole
-                allowedRoles={[
-                  "Administrateur Principal",
-                ]}
-              >
+              <ProtectedRole allowedRoles={["Administrateur Principal"]}>
                 <Roles />
               </ProtectedRole>
             </PrivateRoute>
@@ -160,14 +181,10 @@ function App() {
         />
 
         {/* Route par défaut */}
-        <Route
-          path="*"
-          element={<Navigate to="/" />}
-        />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-

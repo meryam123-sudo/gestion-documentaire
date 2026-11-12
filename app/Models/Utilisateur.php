@@ -9,6 +9,7 @@ use App\Models\Validation;
 class Utilisateur extends Authenticatable
 {
     use HasApiTokens;
+
     protected $table = 'utilisateurs';
 
     protected $primaryKey = 'idUtilisateur';
@@ -35,8 +36,9 @@ class Utilisateur extends Authenticatable
     {
         return $this->hasMany(Document::class, 'idUtilisateur', 'idUtilisateur');
     }
+
     public function validations()
-{
-    return $this->hasMany(Validation::class, 'idUtilisateur', 'idUtilisateur');
-}
+    {
+        return $this->hasMany(Validation::class, 'idUtilisateur', 'idUtilisateur');
+    }
 }

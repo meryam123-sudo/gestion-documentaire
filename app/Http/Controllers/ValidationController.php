@@ -10,8 +10,30 @@ use Illuminate\Http\Request;
 
 class ValidationController extends Controller
 {
+    private function verifierRoleValidation()
+    {
+        $role = auth()->user()->role->nomRole;
+
+        if (!in_array($role, [
+            'Administrateur Principal',
+            'Responsable de validation'
+        ])) {
+            return response()->json([
+                'message' => 'Accès refusé'
+            ], 403);
+        }
+
+        return null;
+    }
+
     public function documentsSoumis()
     {
+        $autorisation = $this->verifierRoleValidation();
+
+        if ($autorisation) {
+            return $autorisation;
+        }
+
         $documents = Document::with(['categorie', 'dossier', 'utilisateur'])
             ->where('statut', 'soumis')
             ->get();
@@ -21,6 +43,12 @@ class ValidationController extends Controller
 
     public function valider(Request $request, $id)
     {
+        $autorisation = $this->verifierRoleValidation();
+
+        if ($autorisation) {
+            return $autorisation;
+        }
+
         $request->validate([
             'idUtilisateur' => 'required|exists:utilisateurs,idUtilisateur',
             'commentaire' => 'nullable|string',
@@ -72,6 +100,12 @@ class ValidationController extends Controller
 
     public function rejeter(Request $request, $id)
     {
+        $autorisation = $this->verifierRoleValidation();
+
+        if ($autorisation) {
+            return $autorisation;
+        }
+
         $request->validate([
             'idUtilisateur' => 'required|exists:utilisateurs,idUtilisateur',
             'commentaire' => 'required|string',
@@ -123,6 +157,12 @@ class ValidationController extends Controller
 
     public function demanderCorrection(Request $request, $id)
     {
+        $autorisation = $this->verifierRoleValidation();
+
+        if ($autorisation) {
+            return $autorisation;
+        }
+
         $request->validate([
             'idUtilisateur' => 'required|exists:utilisateurs,idUtilisateur',
             'commentaire' => 'required|string',

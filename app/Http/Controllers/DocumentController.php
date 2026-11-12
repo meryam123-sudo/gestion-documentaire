@@ -9,56 +9,71 @@ use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-    public function index(Request $request)
-    {
-        $query = Document::with([
-            'categorie',
-            'dossier',
-            'utilisateur',
-            'versions'
-        ]);
+ public function index(Request $request)
+{
+    $query = Document::with([
+        'categorie',
+        'dossier',
+        'utilisateur',
+        'versions'
+    ]);
 
-        $utilisateur = $request->user();
+    $utilisateur = $request->user();
 
-        if ($utilisateur && $utilisateur->role) {
-            $role = $utilisateur->role->nomRole;
+    if ($utilisateur && $utilisateur->role) {
+        $role = $utilisateur->role->nomRole;
 
-            if ($role === 'Gestionnaire documentaire') {
-                $query->where('idUtilisateur', $utilisateur->idUtilisateur);
-            }
-
-            if ($role === 'Archiviste') {
-                $query->whereIn('statut', ['validé', 'archivé']);
-            }
+        if ($role === 'Gestionnaire documentaire') {
+            $query->where('idUtilisateur', $utilisateur->idUtilisateur);
         }
 
-        if ($request->titre) {
-            $query->where('titre', 'like', '%' . $request->titre . '%');
+        if ($role === 'Archiviste') {
+            $query->whereIn('statut', ['validé', 'archivé']);
         }
 
-        if ($request->reference) {
-            $query->where('reference', 'like', '%' . $request->reference . '%');
+        if ($role === 'Consultant autorisé') {
+            $query->whereIn('statut', ['validé', 'archivé']);
         }
-
-        if ($request->statut) {
-            $query->where('statut', $request->statut);
-        }
-
-        if ($request->niveauConfidentialite) {
-            $query->where(
-                'niveauConfidentialite',
-                $request->niveauConfidentialite
-            );
-        }
-
-        if ($request->idCategorie) {
-            $query->where('idCategorie', $request->idCategorie);
-        }
-
-        $documents = $query->paginate(10);
-
-        return response()->json($documents);
     }
+
+    if ($request->titre) {
+        $query->where('titre', 'like', '%' . $request->titre . '%');
+    }
+
+    if ($request->reference) {
+        $query->where('reference', 'like', '%' . $request->reference . '%');
+    }
+
+    if ($request->statut) {
+        $query->where('statut', $request->statut);
+    }
+
+    if ($request->niveauConfidentialite) {
+        $query->where('niveauConfidentialite', $request->niveauConfidentialite);
+    }
+
+    if ($request->idCategorie) {
+        $query->where('idCategorie', $request->idCategorie);
+    }
+
+    $documents = $query->paginate(10);
+
+    $documents->getCollection()->transform(function ($document) {
+        if (
+            $document->dateExpiration &&
+            now()->toDateString() > $document->dateExpiration &&
+            $document->statut !== 'archivé'
+        ) {
+            $document->statutAffiche = 'expiré';
+        } else {
+            $document->statutAffiche = $document->statut;
+        }
+
+        return $document;
+    });
+
+    return response()->json($documents);
+}
 
     public function store(Request $request)
     {
@@ -72,6 +87,8 @@ class DocumentController extends Controller
             'idDossier' => 'nullable|exists:dossiers,idDossier',
             'idUtilisateur' => 'required|exists:utilisateurs,idUtilisateur',
             'fichier' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'dateEmission' => 'nullable|date',
+            'dateExpiration' => 'nullable|date|after_or_equal:dateEmission',
         ]);
 
         $cheminFichier = $request->file('fichier')->store('documents', 'public');
@@ -87,6 +104,8 @@ class DocumentController extends Controller
             'idCategorie' => $request->idCategorie,
             'idDossier' => $request->idDossier,
             'idUtilisateur' => $request->idUtilisateur,
+            'dateEmission' => $request->dateEmission,
+            'dateExpiration' => $request->dateExpiration,
         ]);
 
         VersionDocument::create([
@@ -188,7 +207,13 @@ class DocumentController extends Controller
             ], 403);
         }
 
-        if ($document->idUtilisateur !== auth()->user()->idUtilisateur) {
+        $utilisateur = auth()->user();
+        $role = $utilisateur->role->nomRole;
+
+        if (
+            $document->idUtilisateur !== $utilisateur->idUtilisateur &&
+            $role !== 'Administrateur Principal'
+        ) {
             return response()->json([
                 'message' => 'Accès refusé'
             ], 403);
@@ -233,21 +258,26 @@ class DocumentController extends Controller
     }
 
     public function telecharger($id)
-    {
-        $document = Document::find($id);
+{
+    $document = Document::find($id);
 
-        if (!$document) {
-            return response()->json([
-                'message' => 'Document introuvable'
-            ], 404);
-        }
-
-        if (!Storage::disk('public')->exists($document->fichier)) {
-            return response()->json([
-                'message' => 'Fichier introuvable dans le stockage'
-            ], 404);
-        }
-
-        return Storage::disk('public')->download($document->fichier);
+    if (!$document) {
+        return response()->json([
+            'message' => 'Document introuvable'
+        ], 404);
     }
+
+    $path = storage_path('app/public/' . $document->fichier);
+
+    if (!file_exists($path)) {
+        return response()->json([
+            'message' => 'Fichier introuvable'
+        ], 404);
+    }
+
+    return response()->download(
+        $path,
+        basename($document->fichier)
+    );
+}
 }

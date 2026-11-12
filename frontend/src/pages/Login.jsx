@@ -34,11 +34,23 @@ export default function Login() {
 
       if (role === "Archiviste") {
         navigate("/archivage");
-      } else if (role === "Gestionnaire documentaire") {
+      } 
+      else if (role === "Consultant autorisé") {
+        navigate("/documents");
+      } 
+      else if (role === "Auditeur") {
+        navigate("/historique");
+      } 
+      else if (role === "Responsable de validation") {
+        navigate("/validations");
+      } 
+      else if (role === "Gestionnaire documentaire") {
         navigate("/documents/ajouter");
-      } else {
+      } 
+      else {
         navigate("/dashboard");
       }
+
     } catch (error) {
       setErreur(
         error.response?.data?.message || "Erreur de connexion"
